@@ -1,7 +1,12 @@
 package com.example.wkmin.showmarker.map;
 
+import android.content.Context;
+
 import com.example.wkmin.showmarker.BasePresenter;
 import com.example.wkmin.showmarker.BaseView;
+import com.example.wkmin.showmarker.data.House;
+
+import io.realm.RealmResults;
 
 /**
  * Created by wkmin on 2017. 5. 11..
@@ -11,7 +16,9 @@ import com.example.wkmin.showmarker.BaseView;
 class MapsContract {
     interface View extends BaseView<Presenter> {
         void showDetailHouseInfo();
-        void showMarkerAll();
+
+        Context getContext();
+        void showMarkerAll(RealmResults<House> allHouse);
     }
 
     interface Presenter extends BasePresenter {

@@ -1,18 +1,30 @@
 package com.example.wkmin.showmarker.map;
 
-import android.support.v4.app.FragmentActivity;
-import android.os.Bundle;
-
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import com.example.wkmin.showmarker.R;
+import android.content.Context;
+import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
+import android.util.Log;
+import android.view.View;
+import android.widget.LinearLayout;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, MapsContract.View {
+import com.example.wkmin.showmarker.R;
+import com.example.wkmin.showmarker.data.House;
+import com.example.wkmin.showmarker.data.source.HouseRepository;
+
+import io.realm.RealmResults;
+
+public class MapsActivity extends FragmentActivity
+        implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener, MapsContract.View, GoogleMap.OnMapClickListener {
+
+    private final String TAG = getClass().getName();
 
     private GoogleMap mMap;
     private MapsContract.Presenter mPresenter;
@@ -27,22 +39,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
 
         // create Presenter
-        new MapsPresenter(this);
+        new MapsPresenter(this, new HouseRepository());
+
     }
 
-
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.setOnMarkerClickListener(this);
+        mMap.setOnMapClickListener(this);
         mPresenter.addMarkerAll();
     }
 
@@ -57,11 +62,43 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     @Override
-    public void showMarkerAll() {
+    public Context getContext() {
+        return this.getBaseContext();
+    }
+
+    @Override
+    public void showMarkerAll(RealmResults<House> allHouse) {
+        LatLng last = null;
         // TODO : 모든 마커 표시
-        // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        for (House house:allHouse) {
+            LatLng latlng = new LatLng(house.getLat(), house.getLng());
+            Marker marker = mMap.addMarker(new MarkerOptions().position(latlng));
+            marker.setTag(house);
+            last = latlng;
+        }
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(last, 15));
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        showDialogDetail(marker.getTag());
+        return false;
+    }
+
+    private void showDialogDetail(Object tag) {
+        Log.i(TAG, "marker name:"+((House)tag).getName());
+        LinearLayout houseDetailLayout = (LinearLayout) findViewById(R.id.houseDetailLayout);
+        houseDetailLayout.setVisibility(View.VISIBLE);
+        showHouseInfoDetailLayout((House)tag);
+    }
+
+    private void showHouseInfoDetailLayout(House house) {
+        // TODO : Image, 각종 정보들 배치하기
+    }
+
+    @Override
+    public void onMapClick(LatLng latLng) {
+        LinearLayout houseDetailLayout = (LinearLayout) findViewById(R.id.houseDetailLayout);
+        houseDetailLayout.setVisibility(View.GONE);
     }
 }
