@@ -4,6 +4,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -22,7 +23,7 @@ import com.example.wkmin.showmarker.data.source.HouseRepository;
 import io.realm.RealmResults;
 
 public class MapsActivity extends FragmentActivity
-        implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener, MapsContract.View, GoogleMap.OnMapClickListener {
+        implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener, MapsContract.View, GoogleMap.OnMapClickListener, GoogleMap.OnCameraMoveListener {
 
     private final String TAG = getClass().getName();
 
@@ -38,9 +39,8 @@ public class MapsActivity extends FragmentActivity
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        // create Presenter
-        new MapsPresenter(this, new HouseRepository());
-
+        // Create Presenter
+        new MapsPresenter(this, HouseRepository.getInstance());
     }
 
     @Override
@@ -48,6 +48,7 @@ public class MapsActivity extends FragmentActivity
         mMap = googleMap;
         mMap.setOnMarkerClickListener(this);
         mMap.setOnMapClickListener(this);
+        mMap.setOnCameraMoveListener(this);
         mPresenter.addMarkerAll();
     }
 
@@ -70,7 +71,7 @@ public class MapsActivity extends FragmentActivity
     public void showMarkerAll(RealmResults<House> allHouse) {
         LatLng last = null;
         // TODO : 모든 마커 표시
-        for (House house:allHouse) {
+        for (House house : allHouse) {
             LatLng latlng = new LatLng(house.getLat(), house.getLng());
             Marker marker = mMap.addMarker(new MarkerOptions().position(latlng));
             marker.setTag(house);
@@ -100,5 +101,25 @@ public class MapsActivity extends FragmentActivity
     public void onMapClick(LatLng latLng) {
         LinearLayout houseDetailLayout = (LinearLayout) findViewById(R.id.houseDetailLayout);
         houseDetailLayout.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void onCameraMove() {
+        /*
+        CameraPosition cameraPosition = mMap.getCameraPosition();
+        if (cameraPosition.zoom > 15) { // street size = 15
+            changeMarkerSmallIcon();
+        } else {
+            changeMarkerLargeIcon();
+        }
+        */
+    }
+
+    private void changeMarkerLargeIcon() {
+        Log.i(TAG, "changeMarkerLargeIcon");
+    }
+
+    private void changeMarkerSmallIcon() {
+        Log.i(TAG, "changeMarkerSmallIcon");
     }
 }
