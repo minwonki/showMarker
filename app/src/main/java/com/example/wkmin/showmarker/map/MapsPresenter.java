@@ -8,14 +8,14 @@ import com.example.wkmin.showmarker.data.source.HouseRepository;
  *
  */
 
-public class MapsPresenter implements MapsContract.Presenter {
+class MapsPresenter implements MapsContract.Presenter {
 
     private final String TAG = this.getClass().getName();
 
     private final MapsContract.View mMapsView;
     private final HouseRepository mHouseRepository;
 
-    public MapsPresenter(MapsContract.View mapsView, HouseRepository houseRepository) {
+    MapsPresenter(MapsContract.View mapsView, HouseRepository houseRepository) {
         mMapsView = mapsView;
         mHouseRepository = houseRepository;
         this.mMapsView.setPresenter(this);
@@ -24,7 +24,6 @@ public class MapsPresenter implements MapsContract.Presenter {
 
     @Override
     public void loadJSONData() {
-        // TODO : JSON 파싱 및 DB에 저장
         String json = Util.readJSONFromAssets(mMapsView.getContext());
         mHouseRepository.ParsingJSONtoRepository(json);
     }
@@ -32,5 +31,10 @@ public class MapsPresenter implements MapsContract.Presenter {
     @Override
     public void addMarkerAll() {
         mMapsView.showMarkerAll(mHouseRepository.findAllHouse());
+    }
+
+    @Override
+    public void addHouseCluster() {
+        mMapsView.addMarkerCluster(mHouseRepository.findAllHouse());
     }
 }

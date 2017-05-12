@@ -25,43 +25,53 @@
             android:layout_alignParentBottom="true"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true" android:visibility="invisible">
+        <RelativeLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:id="@+id/rl_image">
+            <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" map:srcCompat="@android:color/black"
+                    android:id="@+id/iv_image" android:scaleType="fitXY"
+                    android:contentDescription="@string/name"/>
+            <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/name"
+                    android:ems="10"
+                    android:id="@+id/tv_name"
+                    android:textColor="@android:color/white" android:layout_above="@+id/tv_addr"
+                    android:layout_alignParentLeft="true" android:layout_alignParentStart="true"/>
+            <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/name"
+                    android:ems="10"
+                    android:id="@+id/tv_addr"
+                    android:textColor="@android:color/white" android:layout_alignParentBottom="true"
+                    android:layout_alignParentLeft="true" android:layout_alignParentStart="true"/>
+        </RelativeLayout>
         <LinearLayout
                 android:orientation="vertical"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-            <EditText
+                android:layout_height="match_parent"
+                android:layout_weight="3">
+            <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textPersonName"
                     android:text="@string/name"
                     android:ems="10"
-                    android:id="@+id/editText"/>
-            <EditText
+                    android:id="@+id/tv_price"
+                    android:textColor="@android:color/black"/>
+            <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textPersonName"
                     android:text="@string/name"
                     android:ems="10"
-                    android:id="@+id/editText2"/>
-        </LinearLayout>
-        <LinearLayout
-                android:orientation="vertical"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-            <EditText
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="textPersonName"
-                    android:text="@string/name"
-                    android:ems="10"
-                    android:id="@+id/editText4"/>
-            <EditText
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="textPersonName"
-                    android:text="@string/name"
-                    android:ems="10"
-                    android:id="@+id/editText3"/>
+                    android:id="@+id/tv_pricePerPyeong"
+                    android:textColor="@android:color/black"/>
         </LinearLayout>
     </LinearLayout>
 

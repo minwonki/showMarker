@@ -15,13 +15,13 @@ import io.realm.RealmResults;
 
 class MapsContract {
     interface View extends BaseView<Presenter> {
-        void showDetailHouseInfo();
-
         Context getContext();
         void showMarkerAll(RealmResults<House> allHouse);
+        void addMarkerCluster(RealmResults<House> allHouse);
     }
 
     interface Presenter extends BasePresenter {
         void addMarkerAll();
+        void addHouseCluster();
     }
 }

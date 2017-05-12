@@ -4,31 +4,52 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.maps.android.clustering.ClusterManager;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.example.wkmin.showmarker.R;
+import com.example.wkmin.showmarker.cmn.HouseRenderer;
+import com.example.wkmin.showmarker.cmn.HouseClusterItem;
 import com.example.wkmin.showmarker.data.House;
 import com.example.wkmin.showmarker.data.source.HouseRepository;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
 
 import io.realm.RealmResults;
 
 public class MapsActivity extends FragmentActivity
-        implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener, MapsContract.View, GoogleMap.OnMapClickListener, GoogleMap.OnCameraMoveListener {
+        implements OnMapReadyCallback,
+        MapsContract.View,
+        GoogleMap.OnMapClickListener,
+        GoogleMap.OnCameraMoveListener,
+        ClusterManager.OnClusterItemClickListener<HouseClusterItem> {
 
-    private final String TAG = getClass().getName();
+    private final String TAG = getClass().getSimpleName();
 
     private GoogleMap mMap;
     private MapsContract.Presenter mPresenter;
+    private HouseClusterItem clickedClusterItem;
+    private ZoomPosition zoomPosition;
+    private ClusterManager<HouseClusterItem> mClusterManager;
+    private HouseRenderer houseRenderer;
+
+    private enum ZoomPosition {
+        BUILDING,
+        STREET
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,10 +67,20 @@ public class MapsActivity extends FragmentActivity
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        mMap.setOnMarkerClickListener(this);
         mMap.setOnMapClickListener(this);
         mMap.setOnCameraMoveListener(this);
         mPresenter.addMarkerAll();
+        setUpCluster();
+    }
+
+    private void setUpCluster() {
+        mClusterManager = new ClusterManager<>(this, mMap);
+        houseRenderer = new HouseRenderer(this, mMap, mClusterManager);
+        mClusterManager.setRenderer(houseRenderer);
+        mClusterManager.setOnClusterItemClickListener(this);
+        mMap.setOnCameraIdleListener(mClusterManager);
+        mMap.setOnMarkerClickListener(mClusterManager);
+        mPresenter.addHouseCluster();
     }
 
     @Override
@@ -57,10 +88,6 @@ public class MapsActivity extends FragmentActivity
         mPresenter = presenter;
     }
 
-    @Override
-    public void showDetailHouseInfo() {
-        // TODO : 선택한 마커의 상세 정보 표시
-    }
 
     @Override
     public Context getContext() {
@@ -70,56 +97,129 @@ public class MapsActivity extends FragmentActivity
     @Override
     public void showMarkerAll(RealmResults<House> allHouse) {
         LatLng last = null;
-        // TODO : 모든 마커 표시
         for (House house : allHouse) {
-            LatLng latlng = new LatLng(house.getLat(), house.getLng());
-            Marker marker = mMap.addMarker(new MarkerOptions().position(latlng));
-            marker.setTag(house);
-            last = latlng;
+            last = new LatLng(house.getLat(), house.getLng());
         }
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(last, 15));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(last, 14));
+        zoomPosition = ZoomPosition.STREET;
     }
 
     @Override
-    public boolean onMarkerClick(Marker marker) {
-        showDialogDetail(marker.getTag());
+    public void addMarkerCluster(RealmResults<House> allHouse) {
+        for (House house : allHouse) {
+            HouseClusterItem houseClusterItem = new HouseClusterItem(house.getLat(), house.getLng(), house);
+            mClusterManager.addItem(houseClusterItem);
+        }
+        mClusterManager.cluster();
+    }
+
+    @Override
+    public boolean onClusterItemClick(HouseClusterItem houseClusterItem) {
+        showDialogDetail(houseClusterItem.getHouse());
+        changeUnSelectedMarkerIcon(clickedClusterItem);
+        changeSelectedMarkerIcon(houseClusterItem);
+        clickedClusterItem = houseClusterItem;
+        // TODO : clickedClusterItem 위치가 애매함. (Network 속도에 따라 문제가 되지 않을까?)
         return false;
     }
 
-    private void showDialogDetail(Object tag) {
-        Log.i(TAG, "marker name:"+((House)tag).getName());
+    private void changeUnSelectedMarkerIcon(HouseClusterItem houseClusterItem) {
+        if (houseClusterItem != null) {
+            Marker marker = houseRenderer.getMarker(houseClusterItem);
+            if (zoomPosition == ZoomPosition.STREET)
+                loadImageMakerIcon(marker, houseClusterItem.getHouse().getMarkerSmallBase());
+            else
+                loadImageMakerIcon(marker, houseClusterItem.getHouse().getMarkerLargeBase());
+        }
+    }
+
+    private void changeSelectedMarkerIcon(HouseClusterItem houseClusterItem ) {
+        Marker marker = houseRenderer.getMarker(houseClusterItem);
+        if (zoomPosition == ZoomPosition.STREET)
+            loadImageMakerIcon(marker, houseClusterItem.getHouse().getMarkerSmallSelected());
+        else
+            loadImageMakerIcon(marker, houseClusterItem.getHouse().getMarkerLargeSelected());
+    }
+
+    private void showDialogDetail(House house) {
         LinearLayout houseDetailLayout = (LinearLayout) findViewById(R.id.houseDetailLayout);
         houseDetailLayout.setVisibility(View.VISIBLE);
-        showHouseInfoDetailLayout((House)tag);
+        showHouseInfoDetailLayout(house);
     }
 
     private void showHouseInfoDetailLayout(House house) {
         // TODO : Image, 각종 정보들 배치하기
+        TextView tv_name = (TextView) findViewById(R.id.tv_name);
+        TextView tv_addr = (TextView) findViewById(R.id.tv_addr);
+        TextView tv_price = (TextView) findViewById(R.id.tv_price);
+        TextView tv_pricePerPyeong = (TextView) findViewById(R.id.tv_pricePerPyeong);
+
+        final ImageView iv_image = (ImageView) findViewById(R.id.iv_image);
+
+        final ImageLoader imageLoader = ImageLoader.getInstance();
+        imageLoader.loadImage(house.getImage(), new SimpleImageLoadingListener() {
+            @Override
+            public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
+                super.onLoadingComplete(imageUri, view, loadedImage);
+                iv_image.setImageBitmap(loadedImage);
+            }
+        });
+
+        tv_name.setText(house.getName());
+        tv_addr.setText(house.getSido()+" "+
+                        house.getGugun()+" "+
+                        house.getDong()+" "+
+                        house.getBunji());
+        tv_price.setText(house.getPrice() + "/" + house.getFloorArea());
+        tv_pricePerPyeong.setText(house.getPrice()/3 + "/" + house.getFloorArea()/3);
     }
 
     @Override
     public void onMapClick(LatLng latLng) {
         LinearLayout houseDetailLayout = (LinearLayout) findViewById(R.id.houseDetailLayout);
         houseDetailLayout.setVisibility(View.GONE);
+        changeUnSelectedMarkerIcon(clickedClusterItem);
     }
 
     @Override
     public void onCameraMove() {
-        /*
         CameraPosition cameraPosition = mMap.getCameraPosition();
-        if (cameraPosition.zoom > 15) { // street size = 15
-            changeMarkerSmallIcon();
+        if (cameraPosition.zoom > 17) { // divide size
+            if (zoomPosition == ZoomPosition.STREET) {
+                changeMarkerLargeIcon();
+                zoomPosition = ZoomPosition.BUILDING;
+            }
         } else {
-            changeMarkerLargeIcon();
+            if (zoomPosition == ZoomPosition.BUILDING) {
+                changeMarkerSmallIcon();
+                zoomPosition = ZoomPosition.STREET;
+            }
         }
-        */
     }
 
     private void changeMarkerLargeIcon() {
-        Log.i(TAG, "changeMarkerLargeIcon");
+        for (HouseClusterItem item : mClusterManager.getAlgorithm().getItems()) {
+            item.setIconUrl(item.getHouse().getMarkerLargeBase());
+        }
     }
 
     private void changeMarkerSmallIcon() {
-        Log.i(TAG, "changeMarkerSmallIcon");
+        for (HouseClusterItem item : mClusterManager.getAlgorithm().getItems()) {
+            item.setIconUrl(item.getHouse().getMarkerSmallBase());
+        }
     }
+
+    // 마커 클러스터에 속해 있는 마커는 이벤트 처리시 작동으로 렌더링이 되지 않아서
+    // 임시적으로 수정 Maker Icon을 변경함.
+    private void loadImageMakerIcon(final Marker marker, String imageUrl) {
+        final ImageLoader imageLoader = ImageLoader.getInstance();
+        imageLoader.loadImage(imageUrl, new SimpleImageLoadingListener() {
+            @Override
+            public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
+                super.onLoadingComplete(imageUri, view, loadedImage);
+                marker.setIcon(BitmapDescriptorFactory.fromBitmap(loadedImage));
+            }
+        });
+    }
+
 }

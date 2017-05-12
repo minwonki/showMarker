@@ -40,7 +40,7 @@ public class HouseRepository {
         INSTANCE = null;
     }
 
-    public void addHouse(final House house) {
+    private void addHouse(final House house) {
         realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
