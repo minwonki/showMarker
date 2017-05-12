@@ -12,7 +12,6 @@ import com.google.maps.android.clustering.ClusterManager;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
@@ -21,12 +20,14 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.wkmin.showmarker.R;
-import com.example.wkmin.showmarker.cmn.HouseRenderer;
 import com.example.wkmin.showmarker.cmn.HouseClusterItem;
+import com.example.wkmin.showmarker.cmn.HouseRenderer;
 import com.example.wkmin.showmarker.data.House;
 import com.example.wkmin.showmarker.data.source.HouseRepository;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
+
+import java.util.Locale;
 
 import io.realm.RealmResults;
 
@@ -37,7 +38,7 @@ public class MapsActivity extends FragmentActivity
         GoogleMap.OnCameraMoveListener,
         ClusterManager.OnClusterItemClickListener<HouseClusterItem> {
 
-    private final String TAG = getClass().getSimpleName();
+    // private final String TAG = getClass().getSimpleName();
 
     private GoogleMap mMap;
     private MapsContract.Presenter mPresenter;
@@ -148,7 +149,6 @@ public class MapsActivity extends FragmentActivity
     }
 
     private void showHouseInfoDetailLayout(House house) {
-        // TODO : Image, 각종 정보들 배치하기
         TextView tv_name = (TextView) findViewById(R.id.tv_name);
         TextView tv_addr = (TextView) findViewById(R.id.tv_addr);
         TextView tv_price = (TextView) findViewById(R.id.tv_price);
@@ -168,10 +168,16 @@ public class MapsActivity extends FragmentActivity
         tv_name.setText(house.getName());
         tv_addr.setText(house.getSido()+" "+
                         house.getGugun()+" "+
-                        house.getDong()+" "+
-                        house.getBunji());
-        tv_price.setText(house.getPrice() + "/" + house.getFloorArea());
-        tv_pricePerPyeong.setText(house.getPrice()/3 + "/" + house.getFloorArea()/3);
+                        house.getDong()+" / "+
+                        house.getHouseholds()+"세대 / "+
+                        house.getBuildDate().substring(0,4)+"년 준공");
+        String price = String.format(Locale.KOREA,
+                "%.1f억/%.2f\u33A1 ~",house.getPrice()/10000.0, house.getFloorArea());
+        tv_price.setText(price);
+        String pricePerPyeong = String.format(Locale.KOREA,
+                "%d만원 / 3.3\u33A1",
+                house.getPrice()/(int)(house.getFloorArea()/3.3));
+        tv_pricePerPyeong.setText(pricePerPyeong);
     }
 
     @Override

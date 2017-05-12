@@ -20,7 +20,7 @@ public class House extends RealmObject {
     private double  lng;
 
     private int     households;
-    private int     buildDate;
+    private String  buildDate;
     private int     score;
 
     private String  brand;
@@ -110,11 +110,11 @@ public class House extends RealmObject {
         this.households = households;
     }
 
-    public int getBuildDate() {
+    public String getBuildDate() {
         return buildDate;
     }
 
-    public void setBuildDate(int buildDate) {
+    public void setBuildDate(String buildDate) {
         this.buildDate = buildDate;
     }
 

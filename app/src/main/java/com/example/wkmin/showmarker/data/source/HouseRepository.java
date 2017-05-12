@@ -74,7 +74,7 @@ public class HouseRepository {
                 house.setLng(houseObj.getDouble("lng"));
 
                 house.setHouseholds(houseObj.getInt("households"));
-                house.setBuildDate(houseObj.getInt("buildDate"));
+                house.setBuildDate(houseObj.getString("buildDate"));
                 house.setScore(houseObj.getInt("score"));
 
                 house.setBrand(houseObj.getString("brand"));
