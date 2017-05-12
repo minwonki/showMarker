@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">showMarker</string>
-    <string name="title_activity_maps">Map</string>
+    <string name="title_activity_maps">showMarker</string>
     <string name="name">Name</string>
 </resources>
